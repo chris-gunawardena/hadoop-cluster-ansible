@@ -9,11 +9,6 @@
     - apt: name=default-jdk state=present
     - apt: name=ssh state=present
 
-    - group: name=hadoop state=present
-    - user: name=hduser comment="Hadoop user" group=hadoop  generate_ssh_key=yes ssh_key_bits=2048 ssh_key_file=.ssh/id_rsa
-    # #- authorized_key: user=hduser key="{{ lookup('file', '/home/hduser/.ssh/id_rsa.pub') }}"
-    - shell: cat /home/hduser/.ssh/id_rsa.pub >> /home/hduser/.ssh/authorized_keys
-
     #- file: state=directory path="/usr/local/hadoop"  owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r"
     #- get_url: url=http://mirrors.sonic.net/apache/hadoop/common/hadoop-2.6.0/hadoop-2.6.0.tar.gz dest="/usr/local/hadoop/hadoop-2.6.0.tar.gz"
     #- unarchive: src=/usr/local/hadoop/hadoop-2.6.0.tar.gz dest=/usr/local/hadoop/ owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r"  copy=no
@@ -21,24 +16,17 @@
     - command: creates="/usr/local/hadoop" mv /usr/local/hadoop-2.6.0 /usr/local/hadoop
     - file: path=/usr/local/hadoop owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r" recurse=yes
 
-
     - shell: echo "export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64" >> /usr/local/hadoop/etc/hadoop/hadoop-env.sh
     - shell: echo "\n#HADOOP VARIABLES START\nexport JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64\nexport HADOOP_INSTALL=/usr/local/hadoop\nexport PATH=\$PATH:\$HADOOP_INSTALL/bin\nexport PATH=\$PATH:\$HADOOP_INSTALL/sbin\nexport HADOOP_MAPRED_HOME=\$HADOOP_INSTALL\nexport HADOOP_COMMON_HOME=\$HADOOP_INSTALL\nexport HADOOP_HDFS_HOME=\$HADOOP_INSTALL\nexport YARN_HOME=\$HADOOP_INSTALL\nexport HADOOP_COMMON_LIB_NATIVE_DIR=\$HADOOP_INSTALL/lib/native\nexport HADOOP_OPTS=\"-Djava.library.path=\$HADOOP_INSTALL/lib\"\n#HADOOP VARIABLES END\n" >> /home/hduser/.bashrc
-    
+
     - file: path=/app/hadoop/tmp owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r" state=directory
     - copy: src=hadoop_conf_files/core-site.xml dest=/usr/local/hadoop/etc/hadoop/core-site.xml  owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r"
-
-    - copy: src=hadoop_conf_files/mapred-site.xml dest=/usr/local/hadoop/etc/hadoop/mapred-site.xml  owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r"
 
     - file: path=/usr/local/hadoop_store/hdfs/namenode owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r" state=directory
     - file: path=/usr/local/hadoop_store/hdfs/datanode owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r" state=directory
     - copy: src=hadoop_conf_files/hdfs-site.xml dest=/usr/local/hadoop/etc/hadoop/hdfs-site.xml  owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r"
 
-    - shell: /usr/local/hadoop/bin/hadoop namenode -format 
-      sudo_user: hduser
+    - copy: src=hadoop_conf_files/mapred-site.xml dest=/usr/local/hadoop/etc/hadoop/mapred-site.xml  owner=hduser group=hadoop mode="u=rwx,g=rwx,o=r"
 
     - shell: echo "StrictHostKeyChecking no" >> ~/.ssh/config 
-      sudo_user: hduser
-
-    - shell: /usr/local/hadoop/sbin/start-all.sh
       sudo_user: hduser
