@@ -1,0 +1,46 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+NODE_COUNT = 2
+
+Vagrant.configure(2) do |config|
+
+	#virtualbox  settings
+	config.vm.provider "virtualbox" do |vb|
+		vb.memory = "8096"
+	end
+
+
+	NODE_COUNT.times do |i|
+
+		node_id = "node#{i}"
+		config.ssh.insert_key = true
+				
+		config.vm.define node_id do |node|
+			node.vm.box = "ubuntu/trusty64"
+			node.vm.box_check_update = false
+			node.vm.network "public_network", bridge: 'en0: Wi-Fi (AirPort)', ip: "192.168.1.10#{i}"
+			node.vm.hostname = "hadoopnode#{i}"
+
+			#setup hosts file
+			node.vm.provision "shell", inline: " echo \"127.0.0.1	localhost\" > /etc/hosts "
+			NODE_COUNT.times do |j|
+				node.vm.provision "shell", inline: " echo \"192.168.1.10#{j}	hadoopnode#{j}.gunawardena.id.au	hadoopnode#{j}\" >> /etc/hosts "
+			end
+
+
+		end 
+
+	end
+
+
+
+end
+
+
+#ssh-keygen
+
+# sudo fallocate -l 8G /swapfile
+# sudo chmod 600 /swapfile
+# sudo mkswap /swapfile
+# sudo swapon /swapfile
